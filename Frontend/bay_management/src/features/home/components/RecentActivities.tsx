@@ -1,0 +1,125 @@
+import { useAtomValue } from 'jotai';
+import { recentActivitiesAtom } from '../store/homeAtoms';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Activity, Calendar, Trophy, Award, User, Edit } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ko } from 'date-fns/locale';
+
+export function RecentActivities() {
+  const activities = useAtomValue(recentActivitiesAtom);
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'attendance':
+        return <Calendar className="h-4 w-4 text-blue-600" />;
+      case 'point_earned':
+        return <Trophy className="h-4 w-4 text-green-600" />;
+      case 'point_spent':
+        return <Trophy className="h-4 w-4 text-red-600" />;
+      case 'badge_earned':
+        return <Award className="h-4 w-4 text-purple-600" />;
+      case 'profile_update':
+        return <Edit className="h-4 w-4 text-gray-600" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getActivityText = (type: string) => {
+    switch (type) {
+      case 'attendance':
+        return '출석';
+      case 'point_earned':
+        return '포인트 획득';
+      case 'point_spent':
+        return '포인트 사용';
+      case 'badge_earned':
+        return '배지 획득';
+      case 'profile_update':
+        return '프로필 업데이트';
+      default:
+        return '활동';
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'attendance':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'point_earned':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'point_spent':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'badge_earned':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'profile_update':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5" />
+          최근 활동
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {activities.map((activity) => (
+            <div
+              key={activity.id}
+              className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-muted/20 transition-colors"
+            >
+              <div className="mt-1">
+                {getActivityIcon(activity.type)}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between mb-1">
+                  <p className="text-sm font-medium">
+                    {activity.description}
+                  </p>
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-xs ${getActivityColor(activity.type)}`}
+                  >
+                    {getActivityText(activity.type)}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {formatDistanceToNow(new Date(activity.timestamp), { 
+                      addSuffix: true, 
+                      locale: ko 
+                    })}
+                  </span>
+                  
+                  {activity.points && (
+                    <span className="flex items-center gap-1">
+                      <Trophy className="h-3 w-3" />
+                      {activity.points > 0 ? '+' : ''}{activity.points} 포인트
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {activities.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>최근 활동이 없습니다.</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
