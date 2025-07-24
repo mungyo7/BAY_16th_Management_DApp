@@ -1,10 +1,13 @@
 import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ThemeSelect } from '@/components/theme-select';
-import { Home, Users, Calendar, Trophy, User } from 'lucide-react';
+import { Home, Users, Calendar, Trophy, User, Wallet } from 'lucide-react';
+import { useWalletConnection } from '@/shared/hooks/useWallet';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export function Header() {
   const location = useLocation();
+  const { address, connected, disconnect } = useWalletConnection();
   
   const navigation = [
     { name: '홈', href: '/', icon: Home },
@@ -61,9 +64,19 @@ export function Header() {
           
           <div className="flex items-center space-x-2">
             <ThemeSelect />
-            <Button variant="outline" size="sm" className="h-8 px-3">
-              지갑 연결
-            </Button>
+            {connected ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 flex items-center gap-2"
+                onClick={disconnect}
+              >
+                <Wallet className="h-4 w-4" />
+                <span>{address.slice(0, 4)}...{address.slice(-4)}</span>
+              </Button>
+            ) : (
+              <WalletMultiButton className="!h-8 !px-3 !py-0 !text-sm !font-medium !bg-transparent !border !border-input hover:!bg-accent hover:!text-accent-foreground" />
+            )}
           </div>
         </div>
       </div>
