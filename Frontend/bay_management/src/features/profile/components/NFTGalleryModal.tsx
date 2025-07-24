@@ -5,20 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Image, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCluster } from '@/components/cluster/cluster-data-access';
-
-interface NFT {
-  mint: string;
-  name: string;
-  image?: string;
-  description?: string;
-}
-
-interface NFTGalleryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  nfts: NFT[];
-  isLoading: boolean;
-}
+import type { NFTGalleryModalProps } from '../types/wallet.types';
 
 export function NFTGalleryModal({ isOpen, onClose, nfts, isLoading }: NFTGalleryModalProps) {
   const { cluster } = useCluster();

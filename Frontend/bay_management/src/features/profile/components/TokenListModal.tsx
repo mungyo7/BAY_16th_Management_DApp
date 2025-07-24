@@ -5,19 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCluster } from '@/components/cluster/cluster-data-access';
-
-interface Token {
-  mint: string;
-  balance: number;
-  decimals: number;
-}
-
-interface TokenListModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  tokens: Token[];
-  isLoading: boolean;
-}
+import type { TokenListModalProps } from '../types/wallet.types';
 
 export function TokenListModal({ isOpen, onClose, tokens, isLoading }: TokenListModalProps) {
   const { cluster } = useCluster();

@@ -3,6 +3,7 @@ import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useQuery } from '@tanstack/react-query';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useNFTData } from './useNFTData';
+import type { Token } from '../types/wallet.types';
 
 export const useWalletData = () => {
   const { connection } = useConnection();
@@ -43,7 +44,7 @@ export const useWalletData = () => {
           mint: account.account.data.parsed.info.mint,
           balance: account.account.data.parsed.info.tokenAmount.uiAmount,
           decimals: account.account.data.parsed.info.tokenAmount.decimals,
-        }));
+        } as Token));
     },
     enabled: !!publicKey,
     refetchInterval: 60000, // Refetch every minute

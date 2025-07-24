@@ -2,26 +2,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useQuery } from '@tanstack/react-query';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-
-interface NFTMetadata {
-  name: string;
-  description: string;
-  image: string;
-  symbol?: string;
-  attributes?: Array<{
-    trait_type: string;
-    value: string | number;
-  }>;
-}
-
-interface NFTData {
-  mint: string;
-  name: string;
-  image?: string;
-  description?: string;
-  symbol?: string;
-  metadata?: NFTMetadata;
-}
+import type { NFT, NFTMetadata } from '../types/wallet.types';
 
 const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
@@ -125,7 +106,7 @@ export const useNFTData = () => {
 
   const { data: nfts, isLoading } = useQuery({
     queryKey: ['nftsWithMetadata', publicKey?.toString()],
-    queryFn: async (): Promise<NFTData[]> => {
+    queryFn: async (): Promise<NFT[]> => {
       if (!publicKey) return [];
 
       try {
@@ -146,7 +127,7 @@ export const useNFTData = () => {
         });
 
         // Fetch metadata for each NFT
-        const nftDataPromises = nftAccounts.map(async (account): Promise<NFTData | null> => {
+        const nftDataPromises = nftAccounts.map(async (account): Promise<NFT | null> => {
           try {
             const mintAddress = new PublicKey(account.account.data.parsed.info.mint);
             
@@ -203,7 +184,7 @@ export const useNFTData = () => {
         });
 
         const results = await Promise.all(nftDataPromises);
-        return results.filter((nft): nft is NFTData => nft !== null);
+        return results.filter((nft): nft is NFT => nft !== null);
       } catch (error) {
         console.error('Error fetching NFTs:', error);
         return [];
