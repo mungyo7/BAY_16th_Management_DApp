@@ -44,13 +44,13 @@ export const userStatsAtom = atom((get) => {
     .reduce((sum, activity) => sum + (activity.points || 0), 0);
   
   return {
-    totalPoints: currentUser.totalPoints,
+    totalPoints: 1250, // Dummy data
     pointsEarned,
     pointsSpent,
     badgeCount: badges.length,
     nftBadgeCount: badges.filter(badge => badge.isNFT).length,
-    attendanceRate: currentUser.attendanceRate,
-    rank: currentUser.rank,
+    attendanceRate: 85, // Dummy data
+    rank: 3, // Dummy data
     activeDays: Math.floor((Date.now() - new Date(currentUser.joinDate).getTime()) / (1000 * 60 * 60 * 24))
   };
 });
