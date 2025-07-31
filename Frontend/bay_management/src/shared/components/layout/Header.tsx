@@ -1,13 +1,16 @@
 import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ThemeSelect } from '@/components/theme-select';
-import { Home, Users, Calendar, Trophy, User, Wallet } from 'lucide-react';
+import { Home, Users, Calendar, Trophy, User, Wallet, Settings } from 'lucide-react';
 import { useWalletConnection } from '@/shared/hooks/useWallet';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useAtomValue } from 'jotai';
+import { profileAtom } from '@/features/profile/store/profileAtoms';
 
 export function Header() {
   const location = useLocation();
   const { address, connected, disconnect } = useWalletConnection();
+  const profile = useAtomValue(profileAtom);
   
   const navigation = [
     { name: '홈', href: '/', icon: Home },
@@ -15,6 +18,12 @@ export function Header() {
     { name: '프로필', href: '/profile', icon: User },
     { name: '포인트', href: '/points', icon: Trophy },
   ];
+
+  // 운영진인 경우 관리자 메뉴 추가
+  const isAdmin = profile?.role === 'admin';
+  if (isAdmin) {
+    navigation.push({ name: '세션 관리', href: '/admin/session', icon: Settings });
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
