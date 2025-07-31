@@ -1,6 +1,15 @@
 import { ProfileForm, WalletConnection, UserStats, BadgeCollection, ActivityHistory } from '@/features/profile';
+import { WalletGuard } from '@/components/WalletGuard';
 
 export function ProfilePage() {
+  return (
+    <WalletGuard message="프로필 기능을 사용하려면 지갑 연결이 필요합니다.">
+      <ProfilePageContent />
+    </WalletGuard>
+  );
+}
+
+function ProfilePageContent() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">

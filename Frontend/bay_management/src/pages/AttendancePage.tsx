@@ -1,6 +1,15 @@
 import { QRScanner, AttendanceList, AttendanceStats, UpcomingEvents } from '@/features/attendance';
+import { WalletGuard } from '@/components/WalletGuard';
 
 export function AttendancePage() {
+  return (
+    <WalletGuard message="출석체크 기능을 사용하려면 지갑 연결이 필요합니다.">
+      <AttendancePageContent />
+    </WalletGuard>
+  );
+}
+
+function AttendancePageContent() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
