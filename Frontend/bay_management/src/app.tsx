@@ -7,6 +7,8 @@ const LazyHomePage = lazy(() => import('@/pages/HomePage').then(module => ({ def
 const LazyAttendancePage = lazy(() => import('@/pages/AttendancePage').then(module => ({ default: module.AttendancePage })))
 const LazyProfilePage = lazy(() => import('@/pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
 const LazyPointsPage = lazy(() => import('@/pages/PointsPage').then(module => ({ default: module.PointsPage })))
+const LazyAdminSessionPage = lazy(() => import('@/pages/AdminSessionPage').then(module => ({ default: module.AdminSessionPage })))
+const LazyCheckInPage = lazy(() => import('@/pages/CheckInPage').then(module => ({ default: module.CheckInPage })))
 
 const routes: RouteObject[] = [
   {
@@ -17,6 +19,8 @@ const routes: RouteObject[] = [
       { path: 'attendance', element: <LazyAttendancePage /> },
       { path: 'profile', element: <LazyProfilePage /> },
       { path: 'points', element: <LazyPointsPage /> },
+      { path: 'admin/session', element: <LazyAdminSessionPage /> },
+      { path: 'checkin', element: <LazyCheckInPage /> },
     ],
   },
 ]
