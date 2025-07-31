@@ -1,14 +1,40 @@
-import { useAtomValue } from 'jotai';
-import { recentAttendanceAtom } from '../store/attendanceAtoms';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { recentAttendanceAtom, refreshAttendanceRecordsAtom } from '../store/attendanceAtoms';
+import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Clock, CheckCircle, XCircle, Trophy } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, Trophy, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 export function AttendanceList() {
   const attendanceRecords = useAtomValue(recentAttendanceAtom);
+  const refreshAttendanceRecords = useSetAtom(refreshAttendanceRecordsAtom);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시 최신 데이터 로드
+    refreshAttendanceRecords();
+
+    // LocalStorage 변경 감지
+    const handleStorageChange = () => {
+      refreshAttendanceRecords();
+    };
+
+    // 커스텀 이벤트 리스너 (체크인 완료 시)
+    const handleAttendanceUpdate = () => {
+      refreshAttendanceRecords();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('attendanceUpdated', handleAttendanceUpdate);
+    };
+  }, [refreshAttendanceRecords]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -69,6 +95,7 @@ export function AttendanceList() {
                   <TableHead>체크아웃 시간</TableHead>
                   <TableHead>상태</TableHead>
                   <TableHead className="text-right">포인트</TableHead>
+                  <TableHead className="text-center">트랜잭션</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,6 +140,21 @@ export function AttendanceList() {
                         <Trophy className="h-4 w-4 text-yellow-600" />
                         <span className="font-medium">{record.points}</span>
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {record.qrCode ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => window.open(`https://solscan.io/tx/${record.qrCode}?cluster=devnet`, '_blank')}
+                          title="Solscan에서 트랜잭션 확인"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
