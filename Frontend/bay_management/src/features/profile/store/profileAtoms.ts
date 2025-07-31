@@ -3,6 +3,7 @@ import { User, Badge, Activity } from '@/shared/types/global.types';
 import { dummyMembers, dummyBadges, dummyUserActivities } from '@/shared/utils/dummyData';
 
 export const currentUserAtom = atom<User | null>(dummyMembers[0]);
+export const profileAtom = currentUserAtom; // alias for compatibility
 export const walletAddressAtom = atom<string>('');
 export const userBadgesAtom = atom<Badge[]>(dummyBadges);
 export const userActivitiesAtom = atom<Activity[]>(dummyUserActivities);
