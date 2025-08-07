@@ -2,6 +2,7 @@ import { AppProviders } from '@/components/app-providers.tsx'
 import { RouteObject, useRoutes } from 'react-router'
 import { lazy } from 'react'
 import { Layout } from '@/shared/components/layout/Layout'
+import { AdminGuard } from '@/components/AdminGuard'
 
 const LazyHomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
 const LazyAttendancePage = lazy(() => import('@/pages/AttendancePage').then(module => ({ default: module.AttendancePage })))
@@ -19,7 +20,7 @@ const routes: RouteObject[] = [
       { path: 'attendance', element: <LazyAttendancePage /> },
       { path: 'profile', element: <LazyProfilePage /> },
       { path: 'points', element: <LazyPointsPage /> },
-      { path: 'admin/session', element: <LazyAdminSessionPage /> },
+      { path: 'admin/session', element: <AdminGuard><LazyAdminSessionPage /></AdminGuard> },
       { path: 'checkin', element: <LazyCheckInPage /> },
     ],
   },
