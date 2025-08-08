@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ThemeSelect } from '@/components/theme-select';
-import { Home, Users, Calendar, Trophy, User, Wallet, Settings } from 'lucide-react';
+import { Home, Users, Calendar, Trophy, User, Wallet, Settings, ShoppingBag } from 'lucide-react';
 import { useWalletConnection } from '@/shared/hooks/useWallet';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useAtomValue } from 'jotai';
@@ -17,6 +17,7 @@ export function Header() {
     { name: '출석체크', href: '/attendance', icon: Calendar },
     { name: '프로필', href: '/profile', icon: User },
     { name: '포인트', href: '/points', icon: Trophy },
+    { name: '마켓', href: '/market', icon: ShoppingBag },
   ];
 
   // 운영진인 경우 관리자 메뉴 추가
