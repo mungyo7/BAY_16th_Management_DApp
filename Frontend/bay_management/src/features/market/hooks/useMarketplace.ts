@@ -326,6 +326,7 @@ export const useMarketplace = () => {
         }
       }
 
+      console.log('Sending purchase transaction...');
       const tx = await program.methods
         .purchaseProduct(new BN(productId), new BN(quantity))
         .accounts({
@@ -341,7 +342,38 @@ export const useMarketplace = () => {
         })
         .rpc();
 
-      toast.success(`구매가 완료되었습니다. TX: ${tx.slice(0, 8)}...`);
+      console.log('Transaction sent:', tx);
+      console.log('Waiting for confirmation...');
+      
+      // Wait for confirmation with proper error handling
+      try {
+        const confirmation = await connection.confirmTransaction(tx, 'confirmed');
+        console.log('Transaction confirmed:', confirmation);
+        
+        if (confirmation.value.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+        }
+      } catch (confirmError: any) {
+        console.error('Confirmation error:', confirmError);
+        
+        // Check if error indicates the transaction was already processed (which means success)
+        const errorMessage = confirmError.message || confirmError.toString();
+        if (errorMessage.includes('AlreadyProcessed') || 
+            errorMessage.includes('already been processed')) {
+          console.log('Transaction was already processed successfully');
+          return tx; // Return the transaction signature as success
+        }
+        
+        // Check for other non-fatal errors
+        if (!errorMessage.includes('Transaction failed')) {
+          console.log('Transaction may have succeeded despite confirmation error');
+          return tx; // Return the transaction signature
+        }
+        
+        throw confirmError;
+      }
+      
+      console.log('Purchase completed successfully');
       return tx;
     } catch (error: any) {
       console.error('Purchase product error:', error);

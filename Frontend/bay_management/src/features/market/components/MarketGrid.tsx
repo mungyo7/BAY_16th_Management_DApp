@@ -88,19 +88,89 @@ export function MarketGrid({ }: MarketGridProps) {
     
     setIsPurchasing(true);
     try {
-      await purchaseProduct(
+      const txSignature = await purchaseProduct(
         parseInt(selectedProduct.id),
         purchaseQuantity,
         BAY_TOKEN_MINT
       );
       
-      setShowPurchaseDialog(false);
-      setSelectedProduct(null);
-      
-      // Reload products to update stock
-      await loadProducts();
+      if (txSignature) {
+        // Close dialog immediately after transaction is sent
+        setShowPurchaseDialog(false);
+        setSelectedProduct(null);
+        
+        // Show loading toast while waiting for confirmation
+        toast.loading('트랜잭션 확인 중...', { id: 'purchase-confirming' });
+        
+        // Wait a bit for blockchain state to update (confirmation already done in purchaseProduct)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Dismiss loading toast and show success
+        toast.dismiss('purchase-confirming');
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">구매가 완료되었습니다! 🎉</span>
+            <span className="text-xs opacity-80">TX: {txSignature.slice(0, 8)}...</span>
+          </div>,
+          { duration: 5000 }
+        );
+        
+        // Reload products to update stock
+        await loadProducts();
+      }
     } catch (error: any) {
       console.error('Purchase failed:', error);
+      
+      // Dismiss any loading toast
+      toast.dismiss('purchase-confirming');
+      
+      // Check for AlreadyProcessed error (which means success)
+      const errorMessage = error.message || error.toString();
+      if (errorMessage.includes('AlreadyProcessed') || 
+          errorMessage.includes('already been processed')) {
+        setShowPurchaseDialog(false);
+        setSelectedProduct(null);
+        
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">구매가 완료되었습니다! 🎉</span>
+            <span className="text-xs opacity-80">트랜잭션이 이미 처리되었습니다.</span>
+          </div>,
+          { duration: 5000 }
+        );
+        
+        // Wait and reload
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await loadProducts();
+        return;
+      }
+      
+      // Check if error indicates success (for Unknown Program Instruction cases)
+      if (error.logs && Array.isArray(error.logs)) {
+        const hasSuccess = error.logs.some((log: string) => 
+          log.includes('Purchase successful') || 
+          log.includes('Program returned success')
+        );
+        
+        if (hasSuccess) {
+          setShowPurchaseDialog(false);
+          setSelectedProduct(null);
+          
+          toast.success(
+            <div className="flex flex-col gap-1">
+              <span className="font-semibold">구매가 완료되었습니다! 🎉</span>
+              <span className="text-xs opacity-80">상품을 성공적으로 구매했습니다.</span>
+            </div>,
+            { duration: 5000 }
+          );
+          
+          // Wait and reload
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          await loadProducts();
+          return;
+        }
+      }
+      
       toast.error(error.message || '구매에 실패했습니다.');
     } finally {
       setIsPurchasing(false);
