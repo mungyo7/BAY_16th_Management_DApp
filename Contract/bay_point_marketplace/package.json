@@ -1,0 +1,32 @@
+{
+  "name": "bay-point-marketplace",
+  "version": "1.0.0",
+  "description": "BAY Point Marketplace - SPL Token based marketplace for BAY members",
+  "scripts": {
+    "test": "anchor test",
+    "build": "anchor build",
+    "deploy": "anchor deploy",
+    "init-marketplace": "ts-node scripts/initialize-marketplace.ts",
+    "transfer-tokens": "ts-node scripts/transfer-bay-tokens.ts",
+    "initialize": "ts-node scripts/initialize.ts",
+    "admin": "ts-node scripts/admin.ts"
+  },
+  "keywords": [],
+  "author": "BAY Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.0",
+    "@solana/spl-token": "^0.3.11",
+    "@solana/web3.js": "^1.87.6"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.2.2",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.8.9",
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
