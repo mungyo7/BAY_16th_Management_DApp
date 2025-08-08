@@ -59,7 +59,7 @@ async function main() {
     adminKeypair,
     adminKeypair.publicKey,
     null,
-    9 // 9 decimals
+    6 // 6 decimals for BAY token
   );
   console.log("Token mint:", tokenMint.toString());
 
@@ -89,7 +89,7 @@ async function main() {
     tokenMint,
     adminTokenAccount,
     adminKeypair,
-    10000 * 10 ** 9 // 10,000 tokens
+    10000 * 10 ** 6 // 10,000 tokens (6 decimals)
   );
   console.log("✅ Minted 10,000 tokens to admin");
 
@@ -99,13 +99,13 @@ async function main() {
     tokenMint,
     buyerTokenAccount,
     adminKeypair,
-    5000 * 10 ** 9 // 5,000 tokens
+    5000 * 10 ** 6 // 5,000 tokens (6 decimals)
   );
   console.log("✅ Minted 5,000 tokens to buyer");
 
   // Derive PDAs
   [marketplacePda, marketplaceBump] = PublicKey.findProgramAddressSync(
-    [Buffer.from("marketplace")],
+    [Buffer.from("marketplace"), adminKeypair.publicKey.toBuffer()],
     program.programId
   );
   console.log("\n🏪 Marketplace PDA:", marketplacePda.toString());
@@ -168,7 +168,7 @@ async function main() {
       .addProduct(
         "NFT Artwork #1",
         "Beautiful digital art piece from BAY collection",
-        new anchor.BN(100 * 10 ** 9), // 100 tokens
+        new anchor.BN(100 * 10 ** 6), // 100 tokens (6 decimals)
         new anchor.BN(10) // 10 in stock
       )
       .accountsStrict({
@@ -187,7 +187,7 @@ async function main() {
     console.log("- ID:", productAccount.id.toString());
     console.log("- Name:", productAccount.name);
     console.log("- Description:", productAccount.description);
-    console.log("- Price:", (productAccount.price.toNumber() / 10 ** 9), "tokens");
+    console.log("- Price:", (productAccount.price.toNumber() / 10 ** 6), "tokens");
     console.log("- Stock:", productAccount.stock.toString());
     console.log("- Is Active:", productAccount.isActive);
   } catch (error) {
@@ -199,7 +199,7 @@ async function main() {
   try {
     const tx = await program.methods
       .updateProduct(
-        new anchor.BN(80 * 10 ** 9), // New price: 80 tokens
+        new anchor.BN(80 * 10 ** 6), // New price: 80 tokens (6 decimals)
         new anchor.BN(15) // New stock: 15
       )
       .accountsStrict({
@@ -214,7 +214,7 @@ async function main() {
     
     const productAccount = await program.account.product.fetch(productPda);
     console.log("\n📝 Updated Product:");
-    console.log("- New Price:", (productAccount.price.toNumber() / 10 ** 9), "tokens");
+    console.log("- New Price:", (productAccount.price.toNumber() / 10 ** 6), "tokens");
     console.log("- New Stock:", productAccount.stock.toString());
   } catch (error) {
     console.error("❌ Error updating product:", error);
@@ -236,7 +236,7 @@ async function main() {
 
   try {
     const buyerBalanceBefore = await getAccount(provider.connection, buyerTokenAccount);
-    console.log("💰 Buyer balance before:", (Number(buyerBalanceBefore.amount) / 10 ** 9), "tokens");
+    console.log("💰 Buyer balance before:", (Number(buyerBalanceBefore.amount) / 10 ** 6), "tokens");
 
     const tx = await program.methods
       .purchaseProduct(
@@ -260,17 +260,17 @@ async function main() {
     console.log("✅ Transaction:", tx);
     
     const buyerBalanceAfter = await getAccount(provider.connection, buyerTokenAccount);
-    console.log("💰 Buyer balance after:", (Number(buyerBalanceAfter.amount) / 10 ** 9), "tokens");
+    console.log("💰 Buyer balance after:", (Number(buyerBalanceAfter.amount) / 10 ** 6), "tokens");
     
     const treasuryBalance = await getAccount(provider.connection, treasuryPda);
-    console.log("💎 Treasury balance:", (Number(treasuryBalance.amount) / 10 ** 9), "tokens");
+    console.log("💎 Treasury balance:", (Number(treasuryBalance.amount) / 10 ** 6), "tokens");
     
     const purchaseAccount = await program.account.purchase.fetch(purchasePda);
     console.log("\n🧾 Purchase Record:");
     console.log("- Product ID:", purchaseAccount.productId.toString());
     console.log("- Buyer:", purchaseAccount.buyer.toString());
     console.log("- Quantity:", purchaseAccount.quantity.toString());
-    console.log("- Total Price:", (purchaseAccount.totalPrice.toNumber() / 10 ** 9), "tokens");
+    console.log("- Total Price:", (purchaseAccount.totalPrice.toNumber() / 10 ** 6), "tokens");
     
     const productAccount = await program.account.product.fetch(productPda);
     console.log("\n📦 Product after purchase:");
@@ -299,7 +299,7 @@ async function main() {
       .addProduct(
         "Limited Edition Badge",
         "Exclusive BAY community badge for early supporters",
-        new anchor.BN(500 * 10 ** 9), // 500 tokens
+        new anchor.BN(500 * 10 ** 6), // 500 tokens (6 decimals)
         new anchor.BN(5) // Only 5 available
       )
       .accountsStrict({
@@ -318,7 +318,7 @@ async function main() {
     console.log("- ID:", productAccount.id.toString());
     console.log("- Name:", productAccount.name);
     console.log("- Description:", productAccount.description);
-    console.log("- Price:", (productAccount.price.toNumber() / 10 ** 9), "tokens");
+    console.log("- Price:", (productAccount.price.toNumber() / 10 ** 6), "tokens");
     console.log("- Stock:", productAccount.stock.toString());
   } catch (error) {
     console.error("❌ Error adding second product:", error);
@@ -351,10 +351,10 @@ async function main() {
   console.log("\n=== 📊 Final Marketplace State ===");
   const finalMarketplace = await program.account.marketplaceState.fetch(marketplacePda);
   console.log("- Total Products:", finalMarketplace.productCount.toString());
-  console.log("- Total Sales:", (finalMarketplace.totalSales.toNumber() / 10 ** 9), "tokens");
+  console.log("- Total Sales:", (finalMarketplace.totalSales.toNumber() / 10 ** 6), "tokens");
   
   const treasuryBalance = await getAccount(provider.connection, treasuryPda);
-  console.log("- Treasury Balance:", (Number(treasuryBalance.amount) / 10 ** 9), "tokens");
+  console.log("- Treasury Balance:", (Number(treasuryBalance.amount) / 10 ** 6), "tokens");
   
   console.log("\n✨ All tests completed successfully!");
 }

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
+use anchor_spl::token_interface::{self, TokenAccount, Mint, TokenInterface, TransferChecked};
 use crate::state::*;
 use crate::errors::MarketplaceError;
 
@@ -27,16 +27,25 @@ pub fn purchase_product(
         MarketplaceError::InsufficientBalance
     );
     
-    token::transfer(
+    // Log decimals for debugging
+    msg!("Token mint decimals: {}", ctx.accounts.token_mint.decimals);
+    msg!("Total price to transfer: {}", total_price);
+    
+    // BAY token uses 9 decimals on Token-2022
+    let expected_decimals = 9u8;
+    
+    token_interface::transfer_checked(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
-            Transfer {
+            TransferChecked {
                 from: ctx.accounts.buyer_token_account.to_account_info(),
                 to: ctx.accounts.treasury.to_account_info(),
                 authority: ctx.accounts.buyer.to_account_info(),
+                mint: ctx.accounts.token_mint.to_account_info(),
             },
         ),
         total_price,
+        expected_decimals, // Use hardcoded 9 decimals for BAY token
     )?;
     
     product.stock = product.stock
@@ -75,13 +84,13 @@ pub fn purchase_product(
 pub struct PurchaseProduct<'info> {
     #[account(
         mut,
-        seeds = [b"marketplace"],
+        seeds = [b"marketplace", marketplace.admin.as_ref()],
         bump = marketplace.bump
     )]
     pub marketplace: Account<'info, MarketplaceState>,
     
     /// Token mint account
-    pub token_mint: Box<Account<'info, Mint>>,
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
     
     #[account(
         mut,
@@ -113,7 +122,7 @@ pub struct PurchaseProduct<'info> {
         constraint = buyer_token_account.mint == marketplace.token_mint @ MarketplaceError::InvalidTokenMint,
         constraint = buyer_token_account.owner == buyer.key()
     )]
-    pub buyer_token_account: Box<Account<'info, TokenAccount>>,
+    pub buyer_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     
     #[account(
         mut,
@@ -121,11 +130,11 @@ pub struct PurchaseProduct<'info> {
         bump,
         constraint = treasury.key() == marketplace.treasury @ MarketplaceError::InvalidTreasury
     )]
-    pub treasury: Box<Account<'info, TokenAccount>>,
+    pub treasury: Box<InterfaceAccount<'info, TokenAccount>>,
     
     #[account(mut)]
     pub buyer: Signer<'info>,
     
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }

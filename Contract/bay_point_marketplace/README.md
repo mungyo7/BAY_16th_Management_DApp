@@ -95,11 +95,18 @@ Users with BAY tokens can:
 
 1. **Token Authority**: The marketplace doesn't mint new tokens - it only facilitates transfers of existing BAY tokens
 2. **Treasury**: All payments go to the marketplace treasury account
-3. **Decimals**: The BAY token uses 6 decimals (1 BAY = 1,000,000 lamports)
-4. **Testing**: Ensure test wallets have BAY tokens before running tests
+3. **Token Program**: The BAY token uses Token-2022 Program (TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb)
+4. **Decimals**: The BAY token uses 9 decimals (1 BAY = 1,000,000,000 lamports)
+5. **Testing**: Ensure test wallets have BAY tokens before running tests
 
 ## Deployment Addresses
 
-- Program ID: `8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo`
+- Program ID: `32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq`
 - BAY Token Mint: `bay3egCym863ziQsvesuGptuGDkekVN6jwwdPd3Ywu2`
 - Network: Devnet
+
+## Important Changes (v2)
+
+- **Unique Marketplace per Admin**: Each admin now has their own unique marketplace using their public key in the PDA seed
+- **Seed Pattern**: Changed from `[b"marketplace"]` to `[b"marketplace", admin.key()]`
+- **Multiple Marketplaces**: Different admins can now create their own separate marketplaces

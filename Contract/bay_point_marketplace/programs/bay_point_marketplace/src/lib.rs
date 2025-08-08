@@ -6,7 +6,7 @@ pub mod instructions;
 
 use instructions::*;
 
-declare_id!("8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo");
+declare_id!("32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq");
 
 #[program]
 pub mod bay_point_marketplace {

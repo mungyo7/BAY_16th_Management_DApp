@@ -4,6 +4,18 @@
 
 BAY Point 마켓플레이스는 Solana 블록체인 위에서 동작하는 탈중앙화 마켓플레이스입니다. 사용자들은 BAY Point 토큰을 사용하여 상품을 구매할 수 있으며, 관리자는 상품을 등록하고 관리할 수 있습니다.
 
+# 배포 정보 (v2 - 2025.08.08)
+
+## 주요 변경사항
+- **Program ID**: `32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq`
+- **Seed 패턴 변경**: `[b"marketplace"]` → `[b"marketplace", admin.key()]`
+- **특징**: 각 admin별로 고유한 marketplace 생성 가능
+
+## 현재 배포된 PDA 주소
+- **Marketplace**: `jPNbw43RffU6VoNDy95iWVh1hS6v3QY75ceve1K7Rt7`
+- **Treasury**: `A9whQsk1yiAy1eVV4BCX4Jk7djQR96de3wmDLXqEFe9z`
+- **First Product**: `EzrYYUZNKawsaMXiYvz1mZoPju7ioRb7sx3AHRuEWstN`
+  
 ## 🏗️ 컨트랙트 구조
 
 ### 1. **핵심 구성 요소**

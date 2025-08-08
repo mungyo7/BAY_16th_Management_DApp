@@ -1,70 +1,23 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart } from 'lucide-react';
-import { useAtomValue } from 'jotai';
-import { profileAtom } from '@/features/profile/store/profileAtoms';
-
-interface MarketItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  available: number;
-  image?: string;
-}
-
-const mockItems: MarketItem[] = [
-  {
-    id: '1',
-    name: 'BAY 티셔츠',
-    description: '학회 공식 티셔츠입니다. 편안한 착용감과 세련된 디자인.',
-    price: 50,
-    category: 'goods',
-    available: 15,
-  },
-  {
-    id: '2',
-    name: '스터디룸 이용권 (1일)',
-    description: '학회 전용 스터디룸을 하루 동안 이용할 수 있습니다.',
-    price: 20,
-    category: 'voucher',
-    available: 20,
-  },
-  {
-    id: '3',
-    name: '블록체인 입문 교육',
-    description: '초보자를 위한 블록체인 기초 교육 과정입니다.',
-    price: 30,
-    category: 'education',
-    available: 100,
-  },
-  {
-    id: '4',
-    name: 'BAY 스티커 세트',
-    description: '학회 로고 스티커 10장 세트입니다.',
-    price: 10,
-    category: 'goods',
-    available: 50,
-  },
-  {
-    id: '5',
-    name: '1:1 멘토링 (1시간)',
-    description: '선배 개발자와 1대1 멘토링 세션입니다.',
-    price: 40,
-    category: 'service',
-    available: 5,
-  },
-  {
-    id: '6',
-    name: '회의실 이용권 (2시간)',
-    description: '팀 프로젝트를 위한 회의실 2시간 이용권입니다.',
-    price: 15,
-    category: 'voucher',
-    available: 10,
-  },
-];
+import { ShoppingCart, Loader2 } from 'lucide-react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { filteredProductsAtom, productsAtom, isLoadingAtom, selectedProductAtom, isPurchasingAtom } from '../store/marketAtoms';
+import { useMarketplace } from '../hooks/useMarketplace';
+import { useEffect, useState } from 'react';
+import { PublicKey } from '@solana/web3.js';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const categoryColors: Record<string, string> = {
   'goods': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300',
@@ -84,60 +37,200 @@ interface MarketGridProps {
   selectedCategory: string | null;
 }
 
-export function MarketGrid({ selectedCategory }: MarketGridProps) {
-  const profile = useAtomValue(profileAtom);
-  const isAdmin = profile?.role === 'admin';
+// BAY token mint address (Token-2022)
+const BAY_TOKEN_MINT = new PublicKey('bay3egCym863ziQsvesuGptuGDkekVN6jwwdPd3Ywu2'); 
+
+export function MarketGrid({ }: MarketGridProps) {
+  const filteredProducts = useAtomValue(filteredProductsAtom);
+  const setProducts = useSetAtom(productsAtom);
+  const [isLoading, setIsLoading] = useAtom(isLoadingAtom);
+  const [selectedProduct, setSelectedProduct] = useAtom(selectedProductAtom);
+  const [isPurchasing, setIsPurchasing] = useAtom(isPurchasingAtom);
+  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   
-  const filteredItems = selectedCategory 
-    ? mockItems.filter(item => item.category === selectedCategory)
-    : mockItems;
+  const { fetchProducts, purchaseProduct, program } = useMarketplace();
   
-  const handlePurchase = (item: MarketItem) => {
-    // TODO: Implement purchase logic with Solana contract
-    console.log('Purchase item:', item);
+  // Load products when program is ready
+  useEffect(() => {
+    if (program) {
+      loadProducts();
+    }
+  }, [program]);
+  
+  const loadProducts = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Loading products...');
+      const products = await fetchProducts();
+      console.log('Loaded products:', products);
+      setProducts(products);
+      
+      if (products.length === 0) {
+        console.log('No products found. Make sure marketplace is initialized and has products.');
+      }
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      toast.error('상품을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handlePurchaseClick = (product: typeof filteredProducts[0]) => {
+    setSelectedProduct(product);
+    setPurchaseQuantity(1);
+    setShowPurchaseDialog(true);
+  };
+  
+  const handleConfirmPurchase = async () => {
+    if (!selectedProduct) return;
+    
+    setIsPurchasing(true);
+    try {
+      await purchaseProduct(
+        parseInt(selectedProduct.id),
+        purchaseQuantity,
+        BAY_TOKEN_MINT
+      );
+      
+      setShowPurchaseDialog(false);
+      setSelectedProduct(null);
+      
+      // Reload products to update stock
+      await loadProducts();
+    } catch (error: any) {
+      console.error('Purchase failed:', error);
+      toast.error(error.message || '구매에 실패했습니다.');
+    } finally {
+      setIsPurchasing(false);
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredItems.map((item) => (
-        <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex justify-between items-start mb-2">
-              <Badge className={categoryColors[item.category]}>
-                {categoryLabels[item.category]}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                재고: {item.available}개
-              </span>
-            </div>
-            <CardTitle className="text-lg">{item.name}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
-              {item.description}
-            </p>
-          </CardHeader>
+    <>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">상품이 없습니다.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((item) => (
+            <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start mb-2">
+                  <Badge className={categoryColors[item.category || 'goods']}>
+                    {categoryLabels[item.category || 'goods']}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    재고: {item.stock}개
+                  </span>
+                </div>
+                <CardTitle className="text-lg">{item.name}</CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {item.description}
+                </p>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <span className="text-2xl font-bold">{item.price}</span>
+                    <span className="text-sm text-muted-foreground">포인트</span>
+                  </div>
+                  {item.soldCount > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {item.soldCount}개 판매됨
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+              
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  variant="default"
+                  disabled={item.stock === 0}
+                  onClick={() => handlePurchaseClick(item)}
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  {item.stock > 0 ? '구매하기' : '품절'}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Purchase Dialog */}
+      <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>상품 구매</DialogTitle>
+            <DialogDescription>
+              {selectedProduct?.name}을(를) 구매하시겠습니까?
+            </DialogDescription>
+          </DialogHeader>
           
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <span className="text-2xl font-bold">{item.price}</span>
-                <span className="text-sm text-muted-foreground">포인트</span>
+          {selectedProduct && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="quantity" className="text-right">
+                  수량
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  max={selectedProduct.stock}
+                  value={purchaseQuantity}
+                  onChange={(e) => setPurchaseQuantity(parseInt(e.target.value) || 1)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">가격</Label>
+                <div className="col-span-3">
+                  {selectedProduct.price} 포인트
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">총액</Label>
+                <div className="col-span-3 font-bold">
+                  {selectedProduct.price * purchaseQuantity} 포인트
+                </div>
               </div>
             </div>
-          </CardContent>
+          )}
           
-          <CardFooter>
-            <Button 
-              className="w-full" 
-              variant="default"
-              disabled={item.available === 0}
-              onClick={() => handlePurchase(item)}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPurchaseDialog(false)}
+              disabled={isPurchasing}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              {item.available > 0 ? '구매하기' : '품절'}
+              취소
             </Button>
-          </CardFooter>
-        </Card>
-      ))}
-    </div>
+            <Button
+              onClick={handleConfirmPurchase}
+              disabled={isPurchasing || !selectedProduct || purchaseQuantity < 1}
+            >
+              {isPurchasing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  구매 중...
+                </>
+              ) : (
+                '구매하기'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

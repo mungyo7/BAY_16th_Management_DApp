@@ -111,7 +111,7 @@ pub fn deactivate_product(ctx: Context<DeactivateProduct>) -> Result<()> {
 pub struct AddProduct<'info> {
     #[account(
         mut,
-        seeds = [b"marketplace"],
+        seeds = [b"marketplace", marketplace.admin.as_ref()],
         bump = marketplace.bump
     )]
     pub marketplace: Account<'info, MarketplaceState>,
@@ -138,7 +138,7 @@ pub struct AddProduct<'info> {
 #[derive(Accounts)]
 pub struct UpdateProduct<'info> {
     #[account(
-        seeds = [b"marketplace"],
+        seeds = [b"marketplace", marketplace.admin.as_ref()],
         bump = marketplace.bump
     )]
     pub marketplace: Account<'info, MarketplaceState>,
@@ -160,7 +160,7 @@ pub struct UpdateProduct<'info> {
 #[derive(Accounts)]
 pub struct DeactivateProduct<'info> {
     #[account(
-        seeds = [b"marketplace"],
+        seeds = [b"marketplace", marketplace.admin.as_ref()],
         bump = marketplace.bump
     )]
     pub marketplace: Account<'info, MarketplaceState>,

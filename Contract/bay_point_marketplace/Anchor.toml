@@ -5,10 +5,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-bay_point_marketplace = "8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo"
+bay_point_marketplace = "32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq"
 
 [programs.devnet]
-bay_point_marketplace = "8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo"
+bay_point_marketplace = "32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq"
 
 [registry]
 url = "https://api.apr.dev"

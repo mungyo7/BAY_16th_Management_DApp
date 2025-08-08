@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use crate::state::*;
 use crate::errors::MarketplaceError;
 
@@ -35,12 +35,12 @@ pub struct InitializeMarketplace<'info> {
         init,
         payer = admin,
         space = MarketplaceState::LEN,
-        seeds = [b"marketplace"],
+        seeds = [b"marketplace", admin.key().as_ref()],
         bump
     )]
     pub marketplace: Account<'info, MarketplaceState>,
     
-    pub token_mint: Box<Account<'info, Mint>>,
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
     
     #[account(
         init,
@@ -48,14 +48,15 @@ pub struct InitializeMarketplace<'info> {
         token::mint = token_mint,
         token::authority = marketplace,
         seeds = [b"treasury", marketplace.key().as_ref()],
-        bump
+        bump,
+        token::token_program = token_program
     )]
-    pub treasury: Box<Account<'info, TokenAccount>>,
+    pub treasury: Box<InterfaceAccount<'info, TokenAccount>>,
     
     #[account(mut)]
     pub admin: Signer<'info>,
     
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub rent: Sysvar<'info, Rent>,
 }

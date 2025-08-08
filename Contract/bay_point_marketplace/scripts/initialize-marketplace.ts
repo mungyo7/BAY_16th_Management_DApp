@@ -4,7 +4,7 @@ import { BayPointMarketplace } from "../target/types/bay_point_marketplace";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as fs from "fs";
 import { BAY_TOKEN_MINT } from "../tests/constants";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 
 async function main() {
   // Setup connection and provider
@@ -24,7 +24,7 @@ async function main() {
   anchor.setProvider(provider);
   
   // Load the program
-  const programId = new PublicKey("8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo");
+  const programId = new PublicKey("32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq");
   const idl = JSON.parse(
     fs.readFileSync("./target/idl/bay_point_marketplace.json", "utf-8")
   );
@@ -37,7 +37,7 @@ async function main() {
   try {
     // Derive PDAs
     const [marketplace] = PublicKey.findProgramAddressSync(
-      [Buffer.from("marketplace")],
+      [Buffer.from("marketplace"), adminKeypair.publicKey.toBuffer()],
       program.programId
     );
     
@@ -61,7 +61,7 @@ async function main() {
         treasury,
         admin: adminKeypair.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       })
       .rpc();
@@ -85,7 +85,7 @@ async function main() {
     if (error.toString().includes("already")) {
       try {
         const [marketplace] = PublicKey.findProgramAddressSync(
-          [Buffer.from("marketplace")],
+          [Buffer.from("marketplace"), adminKeypair.publicKey.toBuffer()],
           program.programId
         );
         const marketplaceState = await program.account.marketplaceState.fetch(marketplace);
