@@ -32,10 +32,7 @@ const categoryLabels: Record<string, string> = {
   'prize': '상품',
   'service': '서비스',
 };
-{ value: 'gifticon', label: '기프티콘' },
-{ value: 'coupon', label: '쿠폰' },
-{ value: 'prize', label: '상품' },
-{ value: 'service', label: '서비스' },
+
 interface MarketGridProps {
   selectedCategory: string | null;
 }

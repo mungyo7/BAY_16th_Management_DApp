@@ -6,16 +6,18 @@ import {
   isAddProductModalOpenAtom, 
   selectedCategoryAtom,
   marketplaceStateAtom,
-  userTokenBalanceAtom
+  userTokenBalanceAtom,
+  isMyProductsModalOpenAtom
 } from '@/features/market/store/marketAtoms';
 import { AddProductModal } from '@/features/market/components/AddProductModal';
 import { ProductManagement } from '@/features/market/components/ProductManagement';
 import { BAYTokenBalance } from '@/features/market/components/BAYTokenBalance';
+import { MyProductsModal } from '@/features/market/components/MyProductsModal';
 import { useMarketplace } from '@/features/market/hooks/useMarketplace';
 import { useBAYToken } from '@/features/market/hooks/useBAYToken';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Settings, ShoppingBag, Loader2 } from 'lucide-react';
+import { Plus, Settings, ShoppingBag, Loader2, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { BAY_TOKEN_MINT } from '@/features/market/utils/token-config';
@@ -33,6 +35,7 @@ function MarketPageContent() {
   const isAdmin = profile?.role === 'admin';
   const [selectedCategory, setSelectedCategory] = useAtom(selectedCategoryAtom);
   const setIsAddProductModalOpen = useSetAtom(isAddProductModalOpenAtom);
+  const setIsMyProductsModalOpen = useSetAtom(isMyProductsModalOpenAtom);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const setMarketplaceState = useSetAtom(marketplaceStateAtom);
@@ -107,11 +110,22 @@ function MarketPageContent() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            {isAdmin && isInitialized && (
-              <Button onClick={() => setIsAddProductModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                상품 등록
-              </Button>
+            {isInitialized && (
+              <>
+                <Button 
+                  onClick={() => setIsMyProductsModalOpen(true)}
+                  variant="outline"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  내 상품
+                </Button>
+                {isAdmin && (
+                  <Button onClick={() => setIsAddProductModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    상품 등록
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -185,6 +199,7 @@ function MarketPageContent() {
       )}
       
       <AddProductModal />
+      <MyProductsModal />
     </div>
   );
 }

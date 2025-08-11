@@ -51,6 +51,19 @@ export interface MarketItem {
 
 export type ProductCategory = 'goods' | 'voucher' | 'education' | 'service';
 
+export interface UserPurchase {
+  id: string;
+  purchaseId: string;
+  productId: string;
+  productName: string;
+  productDescription: string;
+  quantity: number;
+  totalPrice: number;
+  pricePerItem: number;
+  timestamp: Date;
+  buyer: string;
+}
+
 // New marketplace program ID
 export const MARKETPLACE_PROGRAM_ID = '32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq';
 

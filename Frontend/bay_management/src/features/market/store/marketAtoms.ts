@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { MarketplaceState, MarketItem } from '../types/marketplace.types';
+import { MarketplaceState, MarketItem, UserPurchase } from '../types/marketplace.types';
 
 // Core marketplace atoms
 export const marketplaceStateAtom = atom<MarketplaceState | null>(null);
@@ -51,3 +51,8 @@ export const userTokenBalanceAtom = atom<number>(0);
 // Purchase state
 export const isPurchasingAtom = atom(false);
 export const purchaseQuantityAtom = atom(1);
+
+// User purchases state
+export const userPurchasesAtom = atom<UserPurchase[]>([]);
+export const isMyProductsModalOpenAtom = atom(false);
+export const isLoadingPurchasesAtom = atom(false);
