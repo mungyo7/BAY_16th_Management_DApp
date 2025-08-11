@@ -25,7 +25,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const categories = [
-  { value: 'goods', label: '굿즈' },
+  { value: 'gifticon', label: '기프티콘' },
   { value: 'voucher', label: '이용권' },
   { value: 'education', label: '교육' },
   { value: 'service', label: '서비스' },

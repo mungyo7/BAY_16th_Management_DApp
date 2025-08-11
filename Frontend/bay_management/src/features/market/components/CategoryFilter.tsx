@@ -7,9 +7,9 @@ interface CategoryFilterProps {
 
 const categories = [
   { id: 'all', name: '전체', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' },
-  { id: 'goods', name: '굿즈', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300' },
-  { id: 'voucher', name: '이용권', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
-  { id: 'education', name: '교육', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+  { id: 'gifticon', name: '기프티콘', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300' },
+  { id: 'coupon', name: '쿠폰', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
+  { id: 'prize', name: '상품', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
   { id: 'service', name: '서비스', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' },
 ];
 

@@ -134,12 +134,12 @@ export function ProductManagement() {
   };
   
   const categoryLabels: Record<string, string> = {
-    'goods': '굿즈',
-    'voucher': '이용권',
-    'education': '교육',
+    'gifticon': '기프티콘',
+    'coupon': '쿠폰',
+    'prize': '상품',
     'service': '서비스',
   };
-  
+
   return (
     <>
       <div className="space-y-4">
