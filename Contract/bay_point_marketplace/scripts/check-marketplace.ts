@@ -6,7 +6,7 @@ const fs = require("fs");
 
 async function main() {
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
-  const programId = new PublicKey("9zDrthQpoM5enKgdv62EgERyJ4SrHsfD2kNxz9At4dRE");
+  const programId = new PublicKey("8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo");
   
   // Load admin wallet
   const walletPath = "./admin_bay1aCfaEwELREDGtadKov2S9CbkSHwLiBmtTo7Mp4u.json";

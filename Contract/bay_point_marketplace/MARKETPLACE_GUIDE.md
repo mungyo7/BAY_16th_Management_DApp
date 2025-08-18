@@ -1,241 +1,574 @@
-# BAY Point 마켓플레이스 스마트 컨트랙트 가이드
+# BAY Point Marketplace 컨트랙트 가이드
 
-## 📌 개요
-
-BAY Point 마켓플레이스는 Solana 블록체인 위에서 동작하는 탈중앙화 마켓플레이스입니다. 사용자들은 BAY Point 토큰을 사용하여 상품을 구매할 수 있으며, 관리자는 상품을 등록하고 관리할 수 있습니다.
-
-# 배포 정보 (v2 - 2025.08.08)
-
-## 주요 변경사항
-- **Program ID**: `32Kb2ew5KzGkUzNdaR1Mq27knK39ijkqKG6ZKUrTZAeq`
-- **Seed 패턴 변경**: `[b"marketplace"]` → `[b"marketplace", admin.key()]`
-- **특징**: 각 admin별로 고유한 marketplace 생성 가능
-
-## 현재 배포된 PDA 주소
-- **Marketplace**: `jPNbw43RffU6VoNDy95iWVh1hS6v3QY75ceve1K7Rt7`
-- **Treasury**: `A9whQsk1yiAy1eVV4BCX4Jk7djQR96de3wmDLXqEFe9z`
-- **First Product**: `EzrYYUZNKawsaMXiYvz1mZoPju7ioRb7sx3AHRuEWstN`
-  
-## 🏗️ 컨트랙트 구조
-
-### 1. **핵심 구성 요소**
-
-#### 📦 **State (상태 저장소)**
-컨트랙트에서 사용되는 데이터 구조들을 정의합니다.
-
-- **MarketplaceState**: 마켓플레이스의 전체적인 상태를 저장
-  - `admin`: 관리자 지갑 주소
-  - `token_mint`: 사용할 토큰(BAY Point)의 주소
-  - `treasury`: 판매 수익금이 모이는 금고 계정
-  - `product_count`: 등록된 상품의 총 개수
-  - `total_sales`: 총 판매액
-  - `is_initialized`: 초기화 여부
-  - `bump`: PDA(Program Derived Address) 생성용 시드
-
-- **Product**: 개별 상품 정보
-  - `id`: 상품 고유 번호
-  - `name`: 상품명 (최대 64자)
-  - `description`: 상품 설명 (최대 256자)
-  - `price`: 가격 (BAY Point 단위)
-  - `stock`: 재고 수량
-  - `sold_count`: 판매된 수량
-  - `is_active`: 활성화 상태
-  - `seller`: 판매자 주소
-  - `created_at/updated_at`: 생성/수정 시간
-
-- **Purchase**: 구매 기록
-  - `id`: 구매 고유 번호
-  - `product_id`: 구매한 상품 번호
-  - `buyer`: 구매자 지갑 주소
-  - `quantity`: 구매 수량
-  - `total_price`: 총 구매 금액
-  - `timestamp`: 구매 시간
-
-## 🔧 주요 기능 (Instructions)
-
-### 1. **initialize_marketplace** - 마켓플레이스 초기화
-
-**역할**: 마켓플레이스를 처음 설정할 때 한 번만 실행됩니다.
-
-**작동 원리**:
-1. 관리자가 이 함수를 호출하여 마켓플레이스를 초기화
-2. 관리자 주소, 토큰 주소, 금고 계정을 설정
-3. 상품 카운터와 총 판매액을 0으로 초기화
-
-**필요한 계정들**:
-- `admin`: 관리자 (서명 필요)
-- `marketplace`: 생성될 마켓플레이스 계정
-- `token_mint`: BAY Point 토큰 계정
-- `treasury`: 금고 계정 (자동 생성)
-
-**초보자 이해하기**:
-> 가게를 처음 열 때 가게 주인을 정하고, 어떤 화폐를 쓸지 정하고, 금고를 만드는 것과 같습니다.
+## 📌 목차
+1. [개요](#개요)
+2. [기본 구조](#기본-구조)
+3. [Account 구조체](#account-구조체)
+4. [Program 함수](#program-함수)
+5. [Instruction 계정 구조](#instruction-계정-구조)
+6. [에러 처리](#에러-처리)
+7. [작동 흐름](#작동-흐름)
+8. [사용 예시](#사용-예시)
 
 ---
 
-### 2. **add_product** - 상품 등록
+## 개요
 
-**역할**: 관리자가 새로운 상품을 마켓플레이스에 등록합니다.
+BAY Point Marketplace는 Solana 블록체인 위에서 동작하는 탈중앙화 마켓플레이스 스마트 컨트랙트입니다. 사용자들이 BAY 토큰을 사용하여 상품을 등록하고 구매할 수 있는 플랫폼을 제공합니다.
 
-**작동 원리**:
-1. 관리자만 실행 가능 (권한 체크)
-2. 상품명, 설명, 가격, 재고 수량을 입력
-3. 새로운 상품 계정 생성 및 정보 저장
-4. 상품 ID는 자동으로 부여됨
+### 주요 특징
+- **BAY 토큰 기반 거래**: Token-2022 프로그램을 사용한 BAY 토큰으로 결제
+- **관리자 권한 시스템**: 마켓플레이스 초기화 및 상품 관리는 관리자만 가능
+- **PDA (Program Derived Address)**: 안전한 계정 관리를 위한 PDA 사용
+- **상품 관리**: 상품 추가, 수정, 비활성화 기능
+- **구매 내역 추적**: 모든 구매 내역을 온체인에 저장
 
-**매개변수**:
-- `name`: 상품명
-- `description`: 상품 설명
-- `price`: 가격 (0보다 커야 함)
-- `stock`: 재고 수량 (0보다 커야 함)
-
-**초보자 이해하기**:
-> 가게 주인이 새로운 상품을 진열대에 올리는 것과 같습니다. 상품 이름표를 붙이고, 가격표를 달고, 재고 수량을 기록합니다.
+### Program ID
+```
+8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo
+```
 
 ---
 
-### 3. **update_product** - 상품 정보 수정
+## 기본 구조
 
-**역할**: 기존 상품의 가격이나 재고를 수정합니다.
-
-**작동 원리**:
-1. 관리자만 실행 가능
-2. 활성화된 상품만 수정 가능
-3. 가격과 재고 중 원하는 것만 선택적으로 수정 가능
-4. 수정 시간 자동 기록
-
-**매개변수**:
-- `price`: 새로운 가격 (선택적)
-- `stock`: 새로운 재고 수량 (선택적)
-
-**초보자 이해하기**:
-> 가게 주인이 상품의 가격표를 바꾸거나 재고를 추가로 채워넣는 것과 같습니다.
+```
+bay_point_marketplace/
+├── src/
+│   ├── lib.rs              # 메인 프로그램 진입점
+│   ├── state.rs            # 데이터 구조체 정의
+│   ├── errors.rs           # 에러 타입 정의
+│   └── instructions/       # 각 기능별 명령어 구현
+│       ├── initialize.rs   # 마켓플레이스 초기화
+│       ├── product_management.rs  # 상품 관리
+│       └── purchase.rs     # 구매 처리
+```
 
 ---
 
-### 4. **deactivate_product** - 상품 비활성화
+## Account 구조체
 
-**역할**: 상품 판매를 중단합니다.
+### 1. MarketplaceState
+마켓플레이스의 전체 상태를 관리하는 핵심 계정입니다.
 
-**작동 원리**:
-1. 관리자만 실행 가능
-2. 상품의 `is_active` 상태를 false로 변경
-3. 비활성화된 상품은 구매 불가능
+```rust
+pub struct MarketplaceState {
+    pub admin: Pubkey,           // 관리자 주소
+    pub token_mint: Pubkey,      // BAY 토큰 민트 주소
+    pub treasury: Pubkey,        // 수익금 보관 주소
+    pub product_count: u64,      // 등록된 상품 총 개수
+    pub total_sales: u64,        // 총 판매액
+    pub is_initialized: bool,    // 초기화 여부
+    pub bump: u8,                // PDA bump seed
+}
+```
 
-**초보자 이해하기**:
-> 가게에서 특정 상품을 진열대에서 내리는 것과 같습니다. 상품은 여전히 존재하지만 더 이상 판매하지 않습니다.
+**역할**:
+- 마켓플레이스의 메타데이터 저장
+- 관리자 권한 검증
+- 상품 카운터 및 판매 통계 관리
 
----
+### 2. Product
+개별 상품 정보를 저장하는 계정입니다.
 
-### 5. **purchase_product** - 상품 구매
+```rust
+pub struct Product {
+    pub id: u64,                 // 상품 고유 ID
+    pub marketplace: Pubkey,     // 소속 마켓플레이스
+    pub name: String,            // 상품명 (최대 64자)
+    pub description: String,     // 상품 설명 (최대 256자)
+    pub price: u64,              // 가격 (BAY 토큰 단위)
+    pub stock: u64,              // 재고 수량
+    pub sold_count: u64,         // 판매된 수량
+    pub is_active: bool,         // 활성화 상태
+    pub seller: Pubkey,          // 판매자 주소
+    pub created_at: i64,         // 생성 시간
+    pub updated_at: i64,         // 수정 시간
+    pub bump: u8,                // PDA bump seed
+}
+```
 
-**역할**: 사용자가 상품을 구매합니다.
+**역할**:
+- 상품의 모든 정보 저장
+- 재고 및 판매 추적
+- 상품 상태 관리
 
-**작동 원리**:
-1. 구매하려는 상품이 활성화 상태인지 확인
-2. 재고가 충분한지 확인
-3. 구매자의 토큰 잔액이 충분한지 확인
-4. 토큰을 구매자 계정에서 금고로 전송
-5. 재고 차감 및 판매 수량 증가
-6. 구매 기록 생성
+### 3. Purchase
+구매 내역을 기록하는 계정입니다.
 
-**매개변수**:
-- `product_id`: 구매할 상품 번호
-- `quantity`: 구매 수량
+```rust
+pub struct Purchase {
+    pub id: u64,                 // 구매 ID
+    pub product_id: u64,         // 구매한 상품 ID
+    pub buyer: Pubkey,           // 구매자 주소
+    pub quantity: u64,           // 구매 수량
+    pub total_price: u64,        // 총 결제 금액
+    pub timestamp: i64,          // 구매 시간
+    pub bump: u8,                // PDA bump seed
+}
+```
 
-**필요한 계정들**:
-- `buyer`: 구매자 (서명 필요)
-- `buyer_token_account`: 구매자의 토큰 계정
-- `treasury`: 금고 계정
-- `product`: 상품 계정
-
-**초보자 이해하기**:
-> 손님이 상품을 고르고, 돈을 지불하면 가게 금고에 돈이 들어가고, 재고가 줄어들며, 영수증이 발행되는 과정입니다.
-
-## 🛡️ 보안 기능
-
-### 권한 관리
-- **관리자 전용 기능**: 상품 등록, 수정, 비활성화는 오직 관리자만 가능
-- **권한 검증**: 모든 중요한 작업 전에 권한을 확인
-
-### 오버플로우 방지
-- **안전한 연산**: 모든 숫자 계산에서 오버플로우 체크
-- **에러 처리**: 문제 발생 시 즉시 트랜잭션 중단
-
-### 데이터 검증
-- **입력값 검증**: 가격과 재고는 0보다 커야 함
-- **길이 제한**: 상품명과 설명의 최대 길이 제한
-- **상태 확인**: 비활성화된 상품은 구매 불가
-
-## 🔑 PDA (Program Derived Address) 구조
-
-PDA는 프로그램이 관리하는 특별한 계정 주소입니다.
-
-### 시드(Seed) 구조
-- **마켓플레이스**: `[b"marketplace"]`
-- **상품**: `[b"product", marketplace_key, product_id]`
-- **구매 기록**: `[b"purchase", buyer_key, purchase_id]`
-- **금고**: `[b"treasury", marketplace_key]`
-
-**초보자 이해하기**:
-> PDA는 프로그램이 직접 관리하는 특별한 보관함입니다. 각 보관함은 고유한 주소를 가지며, 프로그램만이 열 수 있습니다.
-
-## 📊 에러 처리
-
-컨트랙트는 다양한 상황에 대한 에러 메시지를 제공합니다:
-
-- `Unauthorized`: 권한이 없는 사용자가 관리자 기능 시도
-- `AlreadyInitialized`: 이미 초기화된 마켓플레이스를 다시 초기화 시도
-- `ProductNotActive`: 비활성화된 상품 구매 시도
-- `InsufficientStock`: 재고보다 많은 수량 구매 시도
-- `InsufficientBalance`: 잔액 부족으로 구매 불가
-- `InvalidPrice`: 잘못된 가격 설정 (0 이하)
-- `InvalidQuantity`: 잘못된 수량 입력
-
-## 💡 사용 시나리오
-
-### 시나리오 1: 마켓플레이스 설정
-1. 관리자가 `initialize_marketplace` 실행
-2. BAY Point 토큰과 금고 설정 완료
-3. 마켓플레이스 운영 준비 완료
-
-### 시나리오 2: 상품 판매 과정
-1. 관리자가 `add_product`로 "NFT 아트" 상품 등록 (가격: 100 BAY, 재고: 10개)
-2. 사용자 A가 `purchase_product`로 2개 구매
-3. 100 × 2 = 200 BAY가 금고로 이동
-4. 재고가 8개로 감소
-5. 구매 기록 생성
-
-### 시나리오 3: 재고 관리
-1. 재고가 부족해지면 관리자가 `update_product`로 재고 추가
-2. 시즌 세일을 위해 가격 할인
-3. 판매 종료 시 `deactivate_product`로 비활성화
-
-## 🚀 시작하기
-
-### 필요한 도구
-- Solana CLI
-- Anchor Framework
-- Node.js & npm
-- BAY Point 토큰
-
-### 배포 과정
-1. 컨트랙트 빌드: `anchor build`
-2. 테스트 실행: `anchor test`
-3. 배포: `anchor deploy`
-4. 초기화: `initialize_marketplace` 실행
-
-## 📝 주의사항
-
-1. **관리자 권한**: 관리자 키는 안전하게 보관해야 합니다
-2. **토큰 설정**: 올바른 BAY Point 토큰 주소를 사용해야 합니다
-3. **가격 단위**: 모든 가격은 토큰의 최소 단위로 설정됩니다
-4. **트랜잭션 비용**: 모든 작업에는 SOL 가스비가 필요합니다
-
-## 🤝 도움말
-
-이 마켓플레이스는 Anchor 프레임워크를 사용하여 개발되었으며, Solana 블록체인의 보안과 속도를 활용합니다. 추가 질문이나 도움이 필요하시면 개발팀에 문의해주세요.
+**역할**:
+- 구매 내역 영구 저장
+- 거래 증명 및 추적
 
 ---
 
-*이 문서는 초보자도 이해할 수 있도록 작성되었습니다. 기술적인 세부사항이 필요하신 경우 소스 코드를 직접 참고해주세요.*
+## Program 함수
+
+### 1. initialize_marketplace
+마켓플레이스를 최초로 설정합니다.
+
+```rust
+pub fn initialize_marketplace(ctx: Context<InitializeMarketplace>) -> Result<()>
+```
+
+**기능**:
+- 마켓플레이스 계정 생성
+- 관리자 설정
+- Treasury (수익금 보관소) 생성
+- BAY 토큰 민트 연결
+
+### 2. add_product
+새로운 상품을 등록합니다.
+
+```rust
+pub fn add_product(
+    ctx: Context<AddProduct>,
+    name: String,
+    description: String,
+    price: u64,
+    stock: u64,
+) -> Result<()>
+```
+
+**기능**:
+- 상품 정보 검증 (이름 길이, 가격, 재고)
+- 새 상품 계정 생성
+- 상품 ID 자동 할당
+- 마켓플레이스 상품 카운터 증가
+
+### 3. update_product
+기존 상품 정보를 수정합니다.
+
+```rust
+pub fn update_product(
+    ctx: Context<UpdateProduct>,
+    price: Option<u64>,
+    stock: Option<u64>,
+) -> Result<()>
+```
+
+**기능**:
+- 관리자 권한 확인
+- 가격 또는 재고 수정 (선택적)
+- 수정 시간 업데이트
+
+### 4. deactivate_product
+상품을 비활성화합니다.
+
+```rust
+pub fn deactivate_product(ctx: Context<DeactivateProduct>) -> Result<()>
+```
+
+**기능**:
+- 관리자 권한 확인
+- 상품 상태를 비활성화로 변경
+- 구매 불가능 상태로 전환
+
+### 5. purchase_product
+상품을 구매합니다.
+
+```rust
+pub fn purchase_product(
+    ctx: Context<PurchaseProduct>,
+    product_id: u64,
+    quantity: u64,
+) -> Result<()>
+```
+
+**기능**:
+- 상품 활성화 상태 확인
+- 재고 확인
+- 구매자 잔액 확인
+- BAY 토큰 전송 (구매자 → Treasury)
+- 재고 차감 및 판매 통계 업데이트
+- 구매 내역 생성
+
+---
+
+## Instruction 계정 구조
+
+### InitializeMarketplace 계정 구조
+
+```rust
+#[derive(Accounts)]
+pub struct InitializeMarketplace<'info> {
+    #[account(
+        init,
+        payer = admin,
+        space = MarketplaceState::LEN,
+        seeds = [b"marketplace", admin.key().as_ref()],
+        bump
+    )]
+    pub marketplace: Account<'info, MarketplaceState>,
+    
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+    
+    #[account(
+        init,
+        payer = admin,
+        token::mint = token_mint,
+        token::authority = marketplace,
+        seeds = [b"treasury", marketplace.key().as_ref()],
+        bump
+    )]
+    pub treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    
+    pub system_program: Program<'info, System>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub rent: Sysvar<'info, Rent>,
+}
+```
+
+**PDA Seeds**:
+- Marketplace: `["marketplace", admin_pubkey]`
+- Treasury: `["treasury", marketplace_pubkey]`
+
+### AddProduct 계정 구조
+
+```rust
+#[derive(Accounts)]
+pub struct AddProduct<'info> {
+    #[account(
+        mut,
+        seeds = [b"marketplace", marketplace.admin.as_ref()],
+        bump = marketplace.bump
+    )]
+    pub marketplace: Account<'info, MarketplaceState>,
+    
+    #[account(
+        init,
+        payer = admin,
+        space = Product::LEN,
+        seeds = [
+            b"product",
+            marketplace.key().as_ref(),
+            marketplace.product_count.to_le_bytes().as_ref()
+        ],
+        bump
+    )]
+    pub product: Account<'info, Product>,
+    
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    
+    pub system_program: Program<'info, System>,
+}
+```
+
+**PDA Seeds**:
+- Product: `["product", marketplace_pubkey, product_id]`
+
+### PurchaseProduct 계정 구조
+
+```rust
+#[derive(Accounts)]
+#[instruction(product_id: u64)]
+pub struct PurchaseProduct<'info> {
+    #[account(mut)]
+    pub marketplace: Account<'info, MarketplaceState>,
+    
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+    
+    #[account(mut)]
+    pub product: Account<'info, Product>,
+    
+    #[account(
+        init,
+        payer = buyer,
+        space = Purchase::LEN,
+        seeds = [
+            b"purchase",
+            buyer.key().as_ref(),
+            marketplace.total_sales.to_le_bytes().as_ref()
+        ],
+        bump
+    )]
+    pub purchase: Account<'info, Purchase>,
+    
+    #[account(mut)]
+    pub buyer_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    #[account(mut)]
+    pub treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+    
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+}
+```
+
+**PDA Seeds**:
+- Purchase: `["purchase", buyer_pubkey, purchase_id]`
+
+---
+
+## 에러 처리
+
+### MarketplaceError 열거형
+
+```rust
+#[error_code]
+pub enum MarketplaceError {
+    Unauthorized,           // 권한 없음
+    AlreadyInitialized,     // 이미 초기화됨
+    NotInitialized,         // 초기화되지 않음
+    NameTooLong,           // 상품명이 너무 김
+    DescriptionTooLong,    // 설명이 너무 김
+    InvalidPrice,          // 잘못된 가격 (0 이하)
+    InvalidStock,          // 잘못된 재고 (0 이하)
+    ProductNotActive,      // 비활성화된 상품
+    ProductNotFound,       // 상품을 찾을 수 없음
+    InsufficientStock,     // 재고 부족
+    InvalidQuantity,       // 잘못된 수량
+    InsufficientBalance,   // 잔액 부족
+    Overflow,              // 정수 오버플로우
+    InvalidTokenMint,      // 잘못된 토큰 민트
+    InvalidTreasury,       // 잘못된 Treasury
+}
+```
+
+---
+
+## 작동 흐름
+
+### 1. 마켓플레이스 초기화 흐름
+
+```mermaid
+graph LR
+    A[관리자] -->|initialize_marketplace| B[MarketplaceState 생성]
+    B --> C[Treasury 계정 생성]
+    C --> D[BAY 토큰 연결]
+    D --> E[마켓플레이스 활성화]
+```
+
+### 2. 상품 등록 흐름
+
+```mermaid
+graph LR
+    A[관리자] -->|add_product| B[권한 확인]
+    B --> C[상품 정보 검증]
+    C --> D[Product 계정 생성]
+    D --> E[상품 ID 할당]
+    E --> F[product_count 증가]
+```
+
+### 3. 구매 흐름
+
+```mermaid
+graph LR
+    A[구매자] -->|purchase_product| B[상품 활성화 확인]
+    B --> C[재고 확인]
+    C --> D[잔액 확인]
+    D --> E[BAY 토큰 전송]
+    E --> F[재고 차감]
+    F --> G[Purchase 기록 생성]
+    G --> H[통계 업데이트]
+```
+
+---
+
+## 사용 예시
+
+### 1. 마켓플레이스 초기화 (TypeScript)
+
+```typescript
+// 필요한 PDA 계산
+const [marketplacePda] = PublicKey.findProgramAddressSync(
+  [Buffer.from("marketplace"), admin.publicKey.toBuffer()],
+  program.programId
+);
+
+const [treasuryPda] = PublicKey.findProgramAddressSync(
+  [Buffer.from("treasury"), marketplacePda.toBuffer()],
+  program.programId
+);
+
+// 초기화 트랜잭션
+const tx = await program.methods
+  .initializeMarketplace()
+  .accounts({
+    marketplace: marketplacePda,
+    tokenMint: tokenMint,
+    treasury: treasuryPda,
+    admin: admin.publicKey,
+    systemProgram: SystemProgram.programId,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    rent: SYSVAR_RENT_PUBKEY,
+  })
+  .signers([admin])
+  .rpc();
+```
+
+### 2. 상품 추가
+
+```typescript
+const [productPda] = PublicKey.findProgramAddressSync(
+  [
+    Buffer.from("product"),
+    marketplacePda.toBuffer(),
+    new BN(productId).toArrayLike(Buffer, "le", 8)
+  ],
+  program.programId
+);
+
+const tx = await program.methods
+  .addProduct(
+    "테스트 상품",           // name
+    "이것은 테스트 상품입니다", // description
+    new BN(100 * 10 ** 9),   // price (100 BAY)
+    new BN(10)               // stock
+  )
+  .accounts({
+    marketplace: marketplacePda,
+    product: productPda,
+    admin: admin.publicKey,
+    systemProgram: SystemProgram.programId,
+  })
+  .signers([admin])
+  .rpc();
+```
+
+### 3. 상품 구매
+
+```typescript
+const [purchasePda] = PublicKey.findProgramAddressSync(
+  [
+    Buffer.from("purchase"),
+    buyer.publicKey.toBuffer(),
+    new BN(purchaseId).toArrayLike(Buffer, "le", 8)
+  ],
+  program.programId
+);
+
+const tx = await program.methods
+  .purchaseProduct(
+    new BN(0),    // product_id
+    new BN(2)     // quantity
+  )
+  .accounts({
+    marketplace: marketplacePda,
+    tokenMint: tokenMint,
+    product: productPda,
+    purchase: purchasePda,
+    buyerTokenAccount: buyerTokenAccount,
+    treasury: treasuryPda,
+    buyer: buyer.publicKey,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    systemProgram: SystemProgram.programId,
+  })
+  .signers([buyer])
+  .rpc();
+```
+
+### 4. 상품 정보 조회
+
+```typescript
+// 마켓플레이스 정보 조회
+const marketplaceAccount = await program.account.marketplaceState.fetch(marketplacePda);
+console.log("총 상품 수:", marketplaceAccount.productCount.toString());
+console.log("총 판매액:", marketplaceAccount.totalSales.toString());
+
+// 상품 정보 조회
+const productAccount = await program.account.product.fetch(productPda);
+console.log("상품명:", productAccount.name);
+console.log("가격:", productAccount.price.toString());
+console.log("재고:", productAccount.stock.toString());
+
+// 구매 내역 조회
+const purchaseAccount = await program.account.purchase.fetch(purchasePda);
+console.log("구매 수량:", purchaseAccount.quantity.toString());
+console.log("총 결제액:", purchaseAccount.totalPrice.toString());
+```
+
+---
+
+## 보안 고려사항
+
+1. **권한 관리**: 관리자만 상품을 추가/수정/비활성화할 수 있음
+2. **PDA 사용**: 모든 계정은 PDA로 생성되어 프로그램만 제어 가능
+3. **오버플로우 방지**: 모든 수학 연산에 checked 연산 사용
+4. **입력 검증**: 모든 입력값에 대한 유효성 검사
+5. **토큰 검증**: 올바른 토큰 민트 사용 여부 확인
+
+---
+
+## 개발 환경 설정
+
+### 필수 요구사항
+- Rust 1.70.0+
+- Anchor 0.30.0+
+- Solana CLI 1.18.0+
+- Node.js 18+
+- Yarn 또는 npm
+
+### 로컬 개발 명령어
+
+```bash
+# 빌드
+anchor build
+
+# 테스트
+anchor test
+
+# 배포 (devnet)
+anchor deploy --provider.cluster devnet
+
+# 로컬 유효성 검사기 실행
+solana-test-validator
+
+# 로컬 배포
+anchor deploy --provider.cluster localnet
+```
+
+---
+
+## 트러블슈팅
+
+### 일반적인 문제 해결
+
+1. **"Account does not exist" 에러**
+   - PDA 주소 계산이 올바른지 확인
+   - Seeds가 정확한지 검증
+
+2. **"Insufficient balance" 에러**
+   - 구매자의 BAY 토큰 잔액 확인
+   - 토큰 계정이 올바르게 생성되었는지 확인
+
+3. **"Unauthorized" 에러**
+   - 관리자 권한이 필요한 작업인지 확인
+   - 서명자가 올바른지 검증
+
+4. **Token decimals 문제**
+   - BAY 토큰은 9 decimals 사용
+   - 가격 계산 시 decimals 고려
+
+---
+
+## 추가 리소스
+
+- [Anchor Framework 문서](https://www.anchor-lang.com/)
+- [Solana 개발자 문서](https://docs.solana.com/)
+- [Token-2022 프로그램 가이드](https://spl.solana.com/token-2022)
+
+---
+
+## 문의 및 지원
+
+프로젝트 관련 문의사항이나 버그 리포트는 GitHub Issues를 통해 제출해주세요.

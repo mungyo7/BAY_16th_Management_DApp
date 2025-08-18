@@ -6,7 +6,7 @@ async function main() {
   console.log("=== Check Existing Marketplace ===");
   
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
-  const programId = new PublicKey("9zDrthQpoM5enKgdv62EgERyJ4SrHsfD2kNxz9At4dRE");
+  const programId = new PublicKey("8NPWArWjjQthDGGLppygtwwSMtUtajt4jpzVsfu98RAo");
   
   console.log("Program ID:", programId.toString());
   

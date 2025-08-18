@@ -26,8 +26,8 @@ import { toast } from 'sonner';
 
 const categories = [
   { value: 'gifticon', label: '기프티콘' },
-  { value: 'voucher', label: '이용권' },
-  { value: 'education', label: '교육' },
+  { value: 'coupon', label: '쿠폰' },
+  { value: 'prize', label: '상품' },
   { value: 'service', label: '서비스' },
 ];
 
