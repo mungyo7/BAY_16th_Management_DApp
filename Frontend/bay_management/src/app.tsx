@@ -1,6 +1,6 @@
 import { AppProviders } from '@/components/app-providers.tsx'
 import { RouteObject, useRoutes } from 'react-router'
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { Layout } from '@/shared/components/layout/Layout'
 import { AdminGuard } from '@/components/AdminGuard'
 
@@ -32,7 +32,9 @@ export function App() {
   const router = useRoutes(routes)
   return (
     <AppProviders>
-      {router}
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+        {router}
+      </Suspense>
     </AppProviders>
   )
 }

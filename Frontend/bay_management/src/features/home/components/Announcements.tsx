@@ -3,8 +3,8 @@ import { pinnedAnnouncementsAtom, recentAnnouncementsAtom } from '../store/homeA
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Pin, Calendar, User } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { ko } from 'date-fns/locale/ko';
 
 export function Announcements() {
   const pinnedAnnouncements = useAtomValue(pinnedAnnouncementsAtom);
