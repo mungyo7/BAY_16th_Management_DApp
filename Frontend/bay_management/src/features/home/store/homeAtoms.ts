@@ -8,17 +8,19 @@ export const announcementsAtom = atom<Announcement[]>(dummyAnnouncements);
 export const recentActivitiesAtom = atom<Activity[]>(dummyUserActivities);
 export const isLoadingAtom = atom(false);
 
-export const pinnedAnnouncementsAtom = atom((get) => {
+export const sortedAnnouncementsAtom = atom((get) => {
   const announcements = get(announcementsAtom);
-  return announcements.filter(announcement => announcement.isPinned);
-});
-
-export const recentAnnouncementsAtom = atom((get) => {
-  const announcements = get(announcementsAtom);
-  return announcements
-    .filter(announcement => !announcement.isPinned)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  
+  // 고정 공지사항과 일반 공지사항 분리
+  const pinnedAnnouncements = announcements.filter(announcement => announcement.isPinned);
+  const regularAnnouncements = announcements.filter(announcement => !announcement.isPinned);
+  
+  // 각각 최신순으로 정렬
+  pinnedAnnouncements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  regularAnnouncements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  // 고정 공지사항을 먼저, 그 다음 일반 공지사항 (최대 10개)
+  return [...pinnedAnnouncements, ...regularAnnouncements].slice(0, 10);
 });
 
 export const activeMembersAtom = atom((get) => {
