@@ -3,8 +3,7 @@ import { activityPlansAtom } from '../store/homeAtoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Calendar, Clock, MapPin, Users, Award, User, Hash } from 'lucide-react';
+import { Calendar, Clock, MapPin, Award, User, Hash } from 'lucide-react';
 import { format } from 'date-fns/format';
 import { ko } from 'date-fns/locale/ko';
 
@@ -74,10 +73,6 @@ export function ActivityPlan() {
 
       <div className="grid gap-4">
         {activities.map((activity) => {
-          const participationRate = activity.maxParticipants 
-            ? (activity.currentParticipants / activity.maxParticipants) * 100 
-            : 0;
-
           return (
             <Card key={activity.id} className="overflow-hidden">
               <div className={`h-1 ${getCategoryColor(activity.category)}`} />
@@ -135,21 +130,6 @@ export function ActivityPlan() {
                   )}
                 </div>
 
-                {activity.maxParticipants && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span>참가 현황</span>
-                      </div>
-                      <span className="font-medium">
-                        {activity.currentParticipants} / {activity.maxParticipants}명
-                      </span>
-                    </div>
-                    <Progress value={participationRate} className="h-2" />
-                  </div>
-                )}
-
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex gap-1">
                     {activity.tags.map((tag) => (
@@ -159,12 +139,6 @@ export function ActivityPlan() {
                       </Badge>
                     ))}
                   </div>
-                  
-                  {activity.status === 'upcoming' && (
-                    <Button size="sm">
-                      참가 신청
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>
