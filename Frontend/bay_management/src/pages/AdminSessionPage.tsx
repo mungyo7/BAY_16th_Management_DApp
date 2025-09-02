@@ -10,11 +10,8 @@ import { format } from 'date-fns';
 import { WalletGuard } from '@/components/WalletGuard';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { 
-  Connection, 
   PublicKey, 
-  SystemProgram,
-  Transaction,
-  TransactionInstruction
+  SystemProgram
 } from '@solana/web3.js';
 import { BN, AnchorProvider, Program } from '@project-serum/anchor';
 import { IDL, BayAttendanceCheck } from '@/types/program-types';
@@ -27,59 +24,11 @@ export function AdminSessionPage() {
   );
 }
 
-// 컨트랙트 프로그램 ID
-const PROGRAM_ID = new PublicKey('HW4UmSnJfLd8yn8afM3WGz2w52ea7i1oTGqCSAXJmwv5');
+// 환경 변수에서 프로그램 ID 및 RPC 설정 가져오기
+const PROGRAM_ID = new PublicKey(
+  import.meta.env.VITE_PROGRAM_ID || 'HW4UmSnJfLd8yn8afM3WGz2w52ea7i1oTGqCSAXJmwv5'
+);
 
-// 여러 RPC 엔드포인트 사용 (rate limit 회피)
-const RPC_ENDPOINTS = [
-  'https://api.devnet.solana.com',
-  'https://rpc.ankr.com/solana_devnet',
-  'https://solana-devnet.g.alchemy.com/v2/demo'
-];
-
-let currentRpcIndex = 0;
-const CONNECTION = new Connection(RPC_ENDPOINTS[currentRpcIndex], {
-  commitment: 'confirmed',
-  confirmTransactionInitialTimeout: 60000
-});
-
-// RPC 연결 재시도 함수
-async function retryWithFallback<T>(
-  operation: (connection: Connection) => Promise<T>,
-  maxRetries: number = 3
-): Promise<T> {
-  let lastError: any;
-  
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      // 현재 연결로 시도
-      return await operation(CONNECTION);
-    } catch (error: any) {
-      lastError = error;
-      console.warn(`RPC 요청 실패 (시도 ${i + 1}/${maxRetries}):`, error.message);
-      
-      // 429 에러면 다른 RPC로 전환
-      if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
-        currentRpcIndex = (currentRpcIndex + 1) % RPC_ENDPOINTS.length;
-        const newEndpoint = RPC_ENDPOINTS[currentRpcIndex];
-        console.log(`RPC 엔드포인트 변경: ${newEndpoint}`);
-        
-        // CONNECTION 객체 재생성
-        Object.assign(CONNECTION, new Connection(newEndpoint, {
-          commitment: 'confirmed',
-          confirmTransactionInitialTimeout: 60000
-        }));
-      }
-      
-      // 재시도 전 대기
-      if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-      }
-    }
-  }
-  
-  throw lastError;
-}
 
 function AdminSessionContent() {
   const { publicKey, wallet, sendTransaction } = useWallet();
@@ -111,13 +60,17 @@ function AdminSessionContent() {
     try {
       // 1. 먼저 블록체인에 세션 생성 트랜잭션 실행
       
-      // SOL 잔액 확인 (retry 로직 적용)
-      const balance = await retryWithFallback(
-        async (conn) => await conn.getBalance(publicKey)
-      );
-      console.log('지갑 SOL 잔액:', balance / 1e9, 'SOL');
+      // SOL 잔액 확인 (wallet adapter connection 사용)
+      let balance = 0;
+      try {
+        balance = await connection.getBalance(publicKey);
+        console.log('지갑 SOL 잔액:', balance / 1e9, 'SOL');
+      } catch (balanceError) {
+        console.warn('잔액 확인 실패, 계속 진행:', balanceError);
+        // 잔액 확인 실패해도 트랜잭션은 시도
+      }
       
-      if (balance < 0.001 * 1e9) {
+      if (balance > 0 && balance < 0.001 * 1e9) {
         toast.error('SOL 잔액이 부족합니다. 최소 0.001 SOL이 필요합니다.');
         setIsGenerating(false);
         return;
@@ -216,9 +169,7 @@ function AdminSessionContent() {
             .transaction();
           
           // 블록해시 설정
-          const { blockhash: initBlockhash } = await retryWithFallback(
-            async (conn) => await conn.getLatestBlockhash('confirmed')
-          );
+          const { blockhash: initBlockhash } = await connection.getLatestBlockhash('confirmed');
           initMemberTx.recentBlockhash = initBlockhash;
           initMemberTx.feePayer = publicKey;
           
@@ -305,9 +256,7 @@ function AdminSessionContent() {
         .transaction();
 
       // 최신 블록해시 설정
-      const { blockhash } = await retryWithFallback(
-        async (conn) => await conn.getLatestBlockhash('confirmed')
-      );
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
       
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
@@ -322,9 +271,7 @@ function AdminSessionContent() {
       // 먼저 시뮬레이션으로 문제 확인
       console.log('트랜잭션 시뮬레이션 실행...');
       try {
-        const simulationResult = await retryWithFallback(
-          async (conn) => await conn.simulateTransaction(transaction)
-        );
+        const simulationResult = await connection.simulateTransaction(transaction);
         
         console.log('시뮬레이션 결과 상세:', {
           err: simulationResult.value.err,
@@ -380,7 +327,7 @@ function AdminSessionContent() {
       
       while (!confirmed && retries < maxRetries) {
         try {
-          const status = await CONNECTION.getSignatureStatus(signature);
+          const status = await connection.getSignatureStatus(signature);
           console.log(`상태 확인 시도 ${retries + 1}:`, status);
           
           if (status?.value?.confirmationStatus === 'confirmed' || 
@@ -404,7 +351,7 @@ function AdminSessionContent() {
       
       if (!confirmed) {
         // 마지막으로 한 번 더 확인
-        const finalStatus = await CONNECTION.getSignatureStatus(signature);
+        const finalStatus = await connection.getSignatureStatus(signature);
         if (finalStatus?.value?.confirmationStatus) {
           confirmed = true;
           console.log('최종 트랜잭션 상태:', finalStatus.value);
@@ -659,6 +606,7 @@ interface SessionRecord {
 }
 
 function CreatedSessions() {
+  const { connection } = useConnection();
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -667,13 +615,13 @@ function CreatedSessions() {
     try {
       // 메모 프로그램의 최근 트랜잭션 가져오기
       const memoProgram = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-      const signatures = await CONNECTION.getSignaturesForAddress(memoProgram, { limit: 100 });
+      const signatures = await connection.getSignaturesForAddress(memoProgram, { limit: 100 });
       
       const sessionList: SessionRecord[] = [];
       
       for (const sig of signatures.slice(0, 20)) { // 최근 20개만 확인
         try {
-          const tx = await CONNECTION.getTransaction(sig.signature, {
+          const tx = await connection.getTransaction(sig.signature, {
             maxSupportedTransactionVersion: 0
           });
           
