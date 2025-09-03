@@ -136,7 +136,6 @@ export const quickLinksAtom = atom<QuickLink[]>([
   {
     id: '1',
     title: 'GitHub',
-    description: 'BAY 공식 GitHub 레포지토리',
     url: 'https://github.com/bay-blockchain',
     isExternal: true,
     category: 'resource'
@@ -144,7 +143,6 @@ export const quickLinksAtom = atom<QuickLink[]>([
   {
     id: '2',
     title: 'Discord',
-    description: '실시간 소통 채널',
     url: 'https://discord.gg/bay-blockchain',
     isExternal: true,
     category: 'social'
@@ -152,7 +150,6 @@ export const quickLinksAtom = atom<QuickLink[]>([
   {
     id: '3',
     title: 'Notion',
-    description: '학회 문서 및 자료실',
     url: 'https://notion.so/bay-blockchain',
     isExternal: true,
     category: 'document'
@@ -160,7 +157,6 @@ export const quickLinksAtom = atom<QuickLink[]>([
   {
     id: '4',
     title: 'Solana Docs',
-    description: 'Solana 공식 문서',
     url: 'https://docs.solana.com',
     isExternal: true,
     category: 'resource'
