@@ -81,18 +81,32 @@ function AdminSessionContent() {
       const startDateTime = new Date(`${sessionData.date}T${sessionData.startTime}`);
       const lateDateTime = new Date(`${sessionData.date}T${sessionData.lateTime}`);
       
+      console.log('⏰ 시간 검증 시작:', {
+        현재시간: new Date(),
+        시작시간: startDateTime,
+        지각시간: lateDateTime,
+        시작시간이지각시간보다이전: startDateTime < lateDateTime,
+        시작시간이현재시간보다이후: startDateTime > new Date()
+      });
+
       // 시간 검증
       if (startDateTime >= lateDateTime) {
+        console.error('❌ 시간 검증 실패: 시작 시간 >= 지각 시간');
         toast.error('시작 시간은 지각 기준 시간보다 이전이어야 합니다.');
         setIsGenerating(false);
         return;
       }
       
-      if (startDateTime <= new Date()) {
-        toast.error('세션 시작 시간은 현재 시간보다 이후여야 합니다.');
+      // 테스트를 위해 시간 검증 완화 (과거 시간도 허용)
+      const timeDiff = startDateTime.getTime() - new Date().getTime();
+      if (timeDiff < -24 * 60 * 60 * 1000) { // 24시간 전보다 더 과거는 불허
+        console.error('❌ 시간 검증 실패: 시작 시간이 24시간 이전');
+        toast.error('세션 시작 시간이 너무 과거입니다. 최근 24시간 내 시간을 선택해주세요.');
         setIsGenerating(false);
         return;
       }
+      
+      console.log('✅ 시간 검증 통과');
       
       // Unix 타임스탬프 변환
       const sessionDateUnix = Math.floor(sessionDate.setHours(0, 0, 0, 0) / 1000);
@@ -234,8 +248,46 @@ function AdminSessionContent() {
       try {
         const existingSession = await program.account.session.fetchNullable(sessionPDA);
         if (existingSession) {
-          console.log('⚠️ 동일한 날짜의 세션이 이미 존재함:', existingSession);
-          toast.error(`${sessionData.date} 날짜의 세션이 이미 존재합니다.`);
+          console.log('⚠️ 동일한 날짜의 세션이 이미 존재함 - 기존 세션으로 QR 생성:', existingSession);
+          toast.info(`${sessionData.date} 날짜의 세션이 이미 존재합니다. 기존 세션의 QR 코드를 생성합니다.`);
+          
+          // 기존 세션의 QR 코드 생성 (모바일 딥링크 포함)
+          const baseUrl = window.location.origin;
+          const checkInParams = new URLSearchParams({
+            sessionPDA: sessionPDA.toBase58(),
+            sessionDate: sessionDateUnix.toString(),
+            title: sessionData.title,
+            location: sessionData.location
+          }).toString();
+          
+          // Phantom QR 스캐너가 인식할 수 있는 형태의 URL
+          // 방법 1: https:// 명시적 포함
+          const checkInUrl = baseUrl.startsWith('https://') 
+            ? `${baseUrl}/checkin?${checkInParams}`
+            : `https://${baseUrl.replace(/^https?:\/\//, '')}/checkin?${checkInParams}`;
+          
+          console.log('🎯 생성된 체크인 URL (Phantom용):', checkInUrl);
+          console.log('📋 URL 파라미터:', {
+            sessionPDA: sessionPDA.toBase58(),
+            sessionDate: sessionDateUnix.toString(),
+            title: sessionData.title,
+            location: sessionData.location
+          });
+
+          const qrDataUrl = await QRCode.toDataURL(checkInUrl, {
+            width: 300,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF',
+            }
+          });
+
+          setQrCodeUrl(qrDataUrl);
+          toast.success('기존 세션의 QR 코드가 생성되었습니다.', {
+            description: `URL: ${checkInUrl.substring(0, 50)}...`,
+            duration: 5000
+          });
           setIsGenerating(false);
           return;
         }
@@ -370,13 +422,20 @@ function AdminSessionContent() {
         }
       });
 
-      // QR 코드용 체크인 URL 생성 (세션 PDA 기반)
-      const checkInUrl = `${window.location.origin}/checkin?` + new URLSearchParams({
+      // QR 코드용 체크인 URL 생성 (세션 PDA 기반, 모바일 딥링크 포함)
+      const baseUrl = window.location.origin;
+      const checkInParams = new URLSearchParams({
         sessionPDA: sessionPDA.toBase58(),        // 블록체인에서 세션 정보 조회용
         sessionDate: sessionDateUnix.toString(),  // 날짜 확인용
         title: sessionData.title,
         location: sessionData.location
       }).toString();
+      
+      // Phantom QR 스캐너가 인식할 수 있는 형태의 URL
+      // 방법 1: https:// 명시적 포함  
+      const checkInUrl = baseUrl.startsWith('https://') 
+        ? `${baseUrl}/checkin?${checkInParams}`
+        : `https://${baseUrl.replace(/^https?:\/\//, '')}/checkin?${checkInParams}`;
 
       const qrDataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
