@@ -16,4 +16,13 @@ export default defineConfig({
       root: resolve(__dirname),
     }),
   ],
+  server: {
+    host: true, // 외부 호스트 허용
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '.ngrok-free.app', // ngrok 도메인 패턴 허용
+      '.ngrok.io',       // 구버전 ngrok 도메인
+    ],
+  },
 })

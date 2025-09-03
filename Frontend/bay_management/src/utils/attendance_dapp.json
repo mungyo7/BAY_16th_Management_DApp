@@ -1,0 +1,638 @@
+{
+  "address": "HW4UmSnJfLd8yn8afM3WGz2w52ea7i1oTGqCSAXJmwv5",
+  "metadata": {
+    "name": "bay_attendance_check",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "check_in",
+      "discriminator": [
+        209,
+        253,
+        4,
+        217,
+        250,
+        241,
+        207,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "member_wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "member_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "attendance_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  110,
+                  100,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "member_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "get_member_stats",
+      "discriminator": [
+        69,
+        179,
+        204,
+        79,
+        91,
+        148,
+        175,
+        103
+      ],
+      "accounts": [
+        {
+          "name": "member",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "member.wallet",
+                "account": "Member"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "get_session_stats",
+      "discriminator": [
+        246,
+        201,
+        15,
+        99,
+        62,
+        199,
+        4,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "session"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_member",
+      "discriminator": [
+        175,
+        223,
+        6,
+        110,
+        126,
+        61,
+        144,
+        21
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin"
+        },
+        {
+          "name": "member_wallet"
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "member_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "role",
+          "type": {
+            "defined": {
+              "name": "MemberRole"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_session",
+      "discriminator": [
+        69,
+        130,
+        92,
+        236,
+        107,
+        231,
+        159,
+        129
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "session_date"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "session_date",
+          "type": "i64"
+        },
+        {
+          "name": "start_time",
+          "type": "i64"
+        },
+        {
+          "name": "late_time",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "reactivate_session",
+      "discriminator": [
+        187,
+        30,
+        212,
+        232,
+        191,
+        241,
+        37,
+        211
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_start_time",
+          "type": "i64"
+        },
+        {
+          "name": "new_late_time",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "update_session_status",
+      "discriminator": [
+        138,
+        126,
+        174,
+        2,
+        46,
+        166,
+        179,
+        156
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "is_active",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AttendanceRecord",
+      "discriminator": [
+        207,
+        57,
+        71,
+        145,
+        143,
+        128,
+        238,
+        179
+      ]
+    },
+    {
+      "name": "Member",
+      "discriminator": [
+        54,
+        19,
+        162,
+        21,
+        29,
+        166,
+        17,
+        198
+      ]
+    },
+    {
+      "name": "Session",
+      "discriminator": [
+        243,
+        81,
+        72,
+        115,
+        214,
+        188,
+        72,
+        144
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "You are not authorized to perform this action"
+    },
+    {
+      "code": 6001,
+      "name": "SessionNotActive",
+      "msg": "The session is not active"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyCheckedIn",
+      "msg": "You have already checked in for this session"
+    },
+    {
+      "code": 6003,
+      "name": "CheckInTimePassed",
+      "msg": "The check-in time has passed"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTimeParameters",
+      "msg": "Invalid time parameters"
+    },
+    {
+      "code": 6005,
+      "name": "MemberNotActive",
+      "msg": "Member is not active"
+    },
+    {
+      "code": 6006,
+      "name": "SessionNotFound",
+      "msg": "Session not found"
+    }
+  ],
+  "types": [
+    {
+      "name": "MemberRole",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Admin"
+          },
+          {
+            "name": "Member"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttendanceStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Present"
+          },
+          {
+            "name": "Late"
+          },
+          {
+            "name": "Absent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Member",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "role",
+            "type": {
+              "defined": {
+                "name": "MemberRole"
+              }
+            }
+          },
+          {
+            "name": "total_attendance",
+            "type": "u32"
+          },
+          {
+            "name": "total_late",
+            "type": "u32"
+          },
+          {
+            "name": "total_absence",
+            "type": "u32"
+          },
+          {
+            "name": "total_points",
+            "type": "u64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttendanceRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "check_in_time",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "AttendanceStatus"
+              }
+            }
+          },
+          {
+            "name": "points_earned",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Session",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_date",
+            "type": "i64"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "late_time",
+            "type": "i64"
+          },
+          {
+            "name": "total_attendees",
+            "type": "u32"
+          },
+          {
+            "name": "total_late",
+            "type": "u32"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
