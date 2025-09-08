@@ -1,4 +1,4 @@
-import { Announcements, ActivityPlan, SimplePointsRanking, UpcomingEvents, QuickLinks } from '@/features/home';
+import { MemberDirectory, Announcements, RecentActivities } from '@/features/home';
 
 export function HomePage() {
   return (
@@ -10,30 +10,14 @@ export function HomePage() {
         </p>
       </div>
 
-      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-8">
-          {/* 공지사항 섹션 */}
-          <div>
-            <Announcements />
-          </div>
-          
-          {/* 활동계획 섹션 */}
-          <div>
-            <ActivityPlan />
-          </div>
+        <div className="lg:col-span-2">
+          <MemberDirectory />
         </div>
         
-        {/* Side Widgets */}
         <div className="space-y-6">
-          {/* 포인트 랭킹 */}
-          <SimplePointsRanking />
-          
-          {/* 다가오는 활동 */}
-          <UpcomingEvents />
-          
-          {/* 바로가기 */}
-          <QuickLinks />
+          <RecentActivities />
+          <Announcements />
         </div>
       </div>
     </div>

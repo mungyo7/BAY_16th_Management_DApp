@@ -12,6 +12,18 @@
         "-y",
         "@upstash/context7-mcp"
       ]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=rjvzofinsenouqvmvebc",
+        "--access-token=sbp_fc91a8e1bca1945201a5f9ebb7566d90e33336b3"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_fc91a8e1bca1945201a5f9ebb7566d90e33336b3"
+      }
     }
   }
 }

@@ -1,0 +1,26 @@
+{
+  "name": "bay-16th-supabase-backend",
+  "version": "1.0.0",
+  "description": "BAY 16기 학회원 관리 시스템 백엔드",
+  "main": "supabase-members.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-supabase-members.js",
+    "start": "node supabase-members.js"
+  },
+  "keywords": [
+    "supabase",
+    "bay",
+    "solana",
+    "member-management"
+  ],
+  "author": "BAY 16th",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
