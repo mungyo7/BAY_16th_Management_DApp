@@ -14,7 +14,6 @@ export function Header() {
 
   const navigation = [
     { name: '홈', href: '/', icon: Home },
-    { name: '출석체크', href: '/attendance', icon: Calendar },
     { name: '프로필', href: '/profile', icon: User },
   ]
 

@@ -1,5 +1,5 @@
-import { ProfileForm, WalletConnection, UserStats, ActivityHistory } from '@/features/profile'
-import { PointsDashboard, PointsHistory } from '@/features/points'
+import { ProfileForm, WalletConnection, ActivityHistory } from '@/features/profile'
+import { AttendanceStats, AttendanceList } from '@/features/attendance'
 import { WalletGuard } from '@/components/WalletGuard'
 
 export function ProfilePage() {
@@ -22,8 +22,8 @@ function ProfilePageContent() {
         <div className="lg:col-span-2">
           <div className="space-y-6">
             <ProfileForm />
-            <UserStats />
-            <PointsHistory />
+            <AttendanceStats />
+            <AttendanceList />
           </div>
         </div>
 
